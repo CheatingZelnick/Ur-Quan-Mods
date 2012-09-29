@@ -1048,6 +1048,26 @@ RedrawQueue (BOOLEAN clear)
 
 			DrawBatch (DisplayArray, DisplayLinks, 0);//BATCH_BUILD_PAGE);
 			SetGraphicScale (0);
+			
+			/* Display count of ships remaining to fight on battle screen */
+			if (LOBYTE (GLOBAL (CurrentActivity)) == IN_ENCOUNTER)
+			{
+				TEXT t;
+				UNICODE buf[10];
+				CONTEXT OldContext;
+				OldContext = SetContext(SpaceContext);
+				SetContextFont (TinyFont);
+				t.align = ALIGN_CENTER;
+				t.baseline.x = 10;
+				t.baseline.y = 10;
+				t.pStr = buf;
+				SetContextForeGroundColor (BUILD_COLOR (
+				MAKE_RGB15 (0x00, 0x00, 0x15), 0x3B));
+				sprintf (buf, "%d", HIBYTE(battle_counter));
+				t.CharCount = (COUNT)~0;
+				font_DrawText (&t);	
+				SetContext(OldContext);
+			}			
 		}
 
 		FlushSounds ();
