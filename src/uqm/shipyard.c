@@ -38,6 +38,7 @@
 #include "libs/graphics/gfx_common.h"
 #include "libs/inplib.h"
 
+//#include "libs/log.h"
 
 #ifdef USE_3DO_HANGAR
 // 3DO 4x3 hangar layout
@@ -533,6 +534,7 @@ CrewTransaction (SIZE crew_delta)
 	}
 }
 
+
 /* in this routine, the least significant byte of pMS->CurState is used
  * to store the current selected ship index
  * a special case for the row is hi-nibble == -1 (0xf), which specifies
@@ -585,8 +587,8 @@ DoModifyShips (MENU_STATE *pMS)
 			SetMenuSounds (MENU_SOUND_ARROWS, MENU_SOUND_SELECT);
 		}
 		
-		if (PulsedInputState.key[KEY_MENU_RIGHT]) right = TRUE;
-		if (PulsedInputState.key[KEY_MENU_LEFT]) left = TRUE;
+		if (PulsedInputState.menu[KEY_MENU_RIGHT]) right = TRUE;
+		if (PulsedInputState.menu[KEY_MENU_LEFT]) left = TRUE;
 		
 
 		if (PulsedInputState.menu[KEY_MENU_RIGHT]) dx = 1;
@@ -883,8 +885,7 @@ DoModifyShips (MENU_STATE *pMS)
 						if (hStarShip == 0)
 						{
 							COUNT crew_cost, crew_count = 0;
-							COUNT crew_diff = GetCrewCount();// + 1;
-//fprintf(stderr, "crew diff %d\n", crew_diff);
+							COUNT crew_diff = GetCrewCount();
 							if (crew_diff != 1)
 							{
 							do							 
@@ -896,10 +897,12 @@ DoModifyShips (MENU_STATE *pMS)
 								crew_cost = GLOBAL (CrewCost) ;//- crew_bought ==	CREW_EXPENSE_THRESHOLD ? 2 : 0;
 								CrewTransaction (-1);
 								DeltaSISGauges (-1, 0, crew_cost);
+								GetCPodCapacity (&r.corner);
+								SetContextForeGroundColor (BLACK_COLOR);
 								DrawPoint (&r.corner);
 								SetContext (StatusContext);
 								GetGaugeRect (&r, TRUE);
-								SetFlashRect (&r, (FRAME)0);
+								SetFlashRect (&r);
 								SetContext (SpaceContext);
 							}while (crew_count < crew_diff);
 							}
@@ -911,17 +914,17 @@ DoModifyShips (MENU_STATE *pMS)
 								crew_bought = (SIZE)MAKE_WORD (
 									GET_GAME_STATE (CREW_PURCHASED0),
 									GET_GAME_STATE (CREW_PURCHASED1));
-								if (StarShipPtr->ShipInfo.crew_level > 0)
+								if (StarShipPtr->crew_level> 0)
 								{
-									if (StarShipPtr->ShipInfo.crew_level > 1)
+									if (StarShipPtr->crew_level > 1)
 										DeltaSISGauges (0, 0, GLOBAL (CrewCost)
 												- (crew_bought ==
 												CREW_EXPENSE_THRESHOLD ? 2 : 0));
 									else
 										DeltaSISGauges (0, 0, (COUNT)ShipCost[
-												GET_RACE_ID (StarShipPtr)]);
+											StarShipPtr->race_id]);									
 									crew_delta = -1;
-									--StarShipPtr->ShipInfo.crew_level;
+									--StarShipPtr->crew_level;
 								}
 								ShowShipCrew (StarShipPtr, &pMS->flash_rect0);
 								r.corner.x = pMS->flash_rect0.corner.x;
@@ -930,8 +933,8 @@ DoModifyShips (MENU_STATE *pMS)
 								r.extent.width = SHIP_WIN_WIDTH;
 								r.extent.height = 5;
 								SetContext (SpaceContext);
-								SetFlashRect (&r, (FRAME)0);
-							}while(StarShipPtr->ShipInfo.crew_level > 0);
+								SetFlashRect (&r);
+							}while(StarShipPtr->crew_level > 0);
 						}		
 						dy = 0;
 					}
@@ -940,8 +943,8 @@ DoModifyShips (MENU_STATE *pMS)
 						if (hStarShip == 0)
 						{
 							COUNT crew_cost = 0, crew_count = 0;
-							COUNT crew_diff = GetCPodCapacity(NULL) - GetCrewCount();
-//fprintf(stderr, "crew diff %d\n", crew_diff);
+							COUNT crew_diff = GetCPodCapacity (&r.corner) - GetCrewCount();
+//log_add (log_Info, "crew diff %d\n", crew_diff);							
 							if (crew_diff != 1)
 							{
 							while (crew_cost < GLOBAL_SIS (ResUnits) && crew_count < crew_diff)							 
@@ -950,43 +953,43 @@ DoModifyShips (MENU_STATE *pMS)
 								crew_bought = (SIZE)MAKE_WORD (
 								GET_GAME_STATE (CREW_PURCHASED0),
 								GET_GAME_STATE (CREW_PURCHASED1));								
-								crew_cost = GLOBAL (CrewCost) ;//- crew_bought ==	CREW_EXPENSE_THRESHOLD ? 2 : 0;
+								crew_cost = GLOBAL (CrewCost) ;
 								CrewTransaction (1);
 								DeltaSISGauges (1, 0, -crew_cost);
 								DrawPoint (&r.corner);
 								SetContext (StatusContext);
 								GetGaugeRect (&r, TRUE);
-								SetFlashRect (&r, (FRAME)0);
+								SetFlashRect (&r);
 								SetContext (SpaceContext);
+								GetCPodCapacity (&r.corner);
 							};
 							}
 						}
 						else
 						{
-							HSTARSHIP hTemplate;
-							SHIP_FRAGMENTPTR TemplatePtr;
+							HFLEETINFO hTemplate;
+							FLEET_INFO *TemplatePtr;
 
 							hTemplate = GetStarShipFromIndex (
 									&GLOBAL (avail_race_q),
-									GET_RACE_ID (StarShipPtr));
-							TemplatePtr = (SHIP_FRAGMENTPTR)LockStarShip (
+									StarShipPtr->race_id);
+							TemplatePtr = LockFleetInfo (
 									&GLOBAL (avail_race_q), hTemplate);
 							do
 							{
 								if (GLOBAL_SIS (ResUnits) >=
 										(DWORD)GLOBAL (CrewCost)
-										&& StarShipPtr->ShipInfo.crew_level <
-										StarShipPtr->ShipInfo.max_crew &&
-										StarShipPtr->ShipInfo.crew_level <
-										TemplatePtr->RaceDescPtr->ship_info.
-										crew_level)
+										&& StarShipPtr->crew_level <
+										StarShipPtr->max_crew &&
+										StarShipPtr->crew_level <
+										TemplatePtr->crew_level)
 								{
-									if (StarShipPtr->ShipInfo.crew_level > 0)
+									if (StarShipPtr->crew_level > 0)
 										DeltaSISGauges (0, 0, -GLOBAL (CrewCost));
 									else
 										DeltaSISGauges (0, 0, -(COUNT)ShipCost[
-												GET_RACE_ID (StarShipPtr) ]);
-									++StarShipPtr->ShipInfo.crew_level;
+											StarShipPtr->race_id]);									
+									++StarShipPtr->crew_level;
 									crew_delta = 1;
 									ShowShipCrew (StarShipPtr, &pMS->flash_rect0);
 									r.corner.x = pMS->flash_rect0.corner.x;
@@ -995,9 +998,9 @@ DoModifyShips (MENU_STATE *pMS)
 									r.extent.width = SHIP_WIN_WIDTH;
 									r.extent.height = 5;
 									SetContext (SpaceContext);
-									SetFlashRect (&r, (FRAME)0);
+									SetFlashRect (&r);
 								}
-							}while(StarShipPtr->ShipInfo.crew_level < StarShipPtr->ShipInfo.max_crew);
+							}while(StarShipPtr->crew_level < StarShipPtr->max_crew);
 							
 							UnlockStarShip (&GLOBAL (avail_race_q),	hTemplate);			
 						}

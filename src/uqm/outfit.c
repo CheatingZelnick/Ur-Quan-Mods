@@ -548,6 +548,35 @@ InitFlash:
 	return (TRUE);
 }
 
+static void AddAFuel(void)
+{
+	RECT r;
+	r.extent.height = 1;
+
+	LockMutex (GraphicsLock);
+	SetContext (SpaceContext);
+	if (GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
+		&& GLOBAL_SIS (ResUnits) >= (DWORD)GLOBAL (FuelCost))
+	{
+		if (GLOBAL_SIS (FuelOnBoard) >= FUEL_RESERVE)
+		{
+			r.extent.width = 3;
+			DrawPoint (&r.corner);
+			r.corner.x += r.extent.width + 1;
+			DrawPoint (&r.corner);
+			r.corner.x -= r.extent.width;
+			SetContextForeGroundColor (
+					SetContextBackGroundColor (BLACK_COLOR));
+			DrawFilledRectangle (&r);
+		}
+		DeltaSISGauges (0, FUEL_TANK_SCALE, -GLOBAL (FuelCost));
+		SetContext (StatusContext);
+		GetGaugeRect (&r, FALSE);
+		SetFlashRect (&r);
+	}
+	UnlockMutex (GraphicsLock);
+}
+
 static void
 ChangeFuelQuantity (void)
 {
@@ -610,7 +639,7 @@ ChangeFuelQuantity (void)
 		SetFlashRect (&r);
 		UnlockMutex (GraphicsLock);
 	}
-	else if (PulsedInputState.key[KEY_MENU_LEFT])
+	else if (PulsedInputState.menu[KEY_MENU_LEFT])
 	{
 		LockMutex (GraphicsLock);
 		SetContext (SpaceContext);
@@ -632,19 +661,26 @@ ChangeFuelQuantity (void)
 		}while(GLOBAL_SIS (FuelOnBoard));
 		SetContext (StatusContext);
 		GetGaugeRect (&r, FALSE);
-		SetFlashRect (&r, (FRAME)0);
+		SetFlashRect (&r);
 		UnlockMutex (GraphicsLock);
 	}
-	else if (PulsedInputState.key[KEY_MENU_RIGHT])
+	else if (PulsedInputState.menu[KEY_MENU_RIGHT])
 	{
-		LockMutex (GraphicsLock);
-		SetContext (SpaceContext);
-		do
+		
+		while(GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
+			&& GLOBAL_SIS (ResUnits) >=
+			(DWORD)GLOBAL (FuelCost))
 		{
-			if (GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
-				&& GLOBAL_SIS (ResUnits) >=
-				(DWORD)GLOBAL (FuelCost))
-			{
+			AddAFuel();
+		}
+/*			
+			LockMutex (GraphicsLock);
+			SetContext (SpaceContext);
+		
+//			if (GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
+//				&& GLOBAL_SIS (ResUnits) >=
+//				(DWORD)GLOBAL (FuelCost))
+//			{
 				if (GLOBAL_SIS (FuelOnBoard) >=
 					FUEL_RESERVE - FUEL_TANK_SCALE)
 				{
@@ -659,16 +695,24 @@ ChangeFuelQuantity (void)
 				DeltaSISGauges (0, FUEL_TANK_SCALE, -GLOBAL (FuelCost));
 				SetContext (StatusContext);
 				GetGaugeRect (&r, FALSE);
-				SetFlashRect (&r, (FRAME)0);
-			}
-		}while(GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
-			&& GLOBAL_SIS (ResUnits) >=
-			(DWORD)GLOBAL (FuelCost));
+				SetFlashRect (&r);				
+				
+//			}
+			
+			
+//		}while(GetFTankCapacity (&r.corner) > GLOBAL_SIS (FuelOnBoard)
+//			&& GLOBAL_SIS (ResUnits) >=
+//			(DWORD)GLOBAL (FuelCost));
+			UnlockMutex (GraphicsLock);
 
-		UnlockMutex (GraphicsLock);
+		}
+		*/
+
+		
 
 	}	
 }
+
 
 static void
 onNamingDone (void)
