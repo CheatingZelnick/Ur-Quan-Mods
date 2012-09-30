@@ -1063,7 +1063,7 @@ RedrawQueue (BOOLEAN clear)
 				t.pStr = buf;
 				SetContextForeGroundColor (BUILD_COLOR (
 				MAKE_RGB15 (0x00, 0x00, 0x15), 0x3B));
-				sprintf (buf, "%d", HIBYTE(battle_counter));
+				sprintf (buf, "%d", battle_counter[1]);
 				t.CharCount = (COUNT)~0;
 				font_DrawText (&t);	
 				SetContext(OldContext);
