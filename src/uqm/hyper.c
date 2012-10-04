@@ -1312,6 +1312,37 @@ ProcessEncounter (ENCOUNTER *EncounterPtr, POINT *puniverse,
 	stamp->origin.x = (COORD)((long)ex * RADAR_WIDTH / RADAR_SCAN_WIDTH) - ox;
 	stamp->origin.y = (COORD)((long)(MAX_Y_UNIVERSE - ey) * RADAR_HEIGHT
 			/ RADAR_SCAN_HEIGHT) - oy;
+			
+// Display ship types in radar map
+		const char ship_types_letter[] = RADAR_SHIP_TYPES;
+
+//		COLOR c;
+		TEXT t;
+//		PRECT r;
+		UNICODE buf[10];
+
+//		STRING locString;
+//		STARSHIPPTR StarShipPtr;
+//		
+////		SetContextFont (TinyFont);
+		SetContext(RadarContext);
+//			SetContextFont (MicroFont);
+		SetContextFont (TinyFont);
+		t.align = ALIGN_CENTER;
+		t.baseline.x = stamp->origin.x;
+		t.baseline.y = stamp->origin.y - 2;
+		t.pStr = buf;
+		SetContextForeGroundColor (BUILD_COLOR (
+			MAKE_RGB15 (0x00, 0x00, 0x15), 0x3B));
+//			MakeScanValue (buf, EncounterPtr->SD.Type, "");
+			
+//			sprintf (buf, "%d", EncounterPtr->SD.Type);
+		sprintf (buf, "%c", ship_types_letter[EncounterPtr->SD.Type]);
+		t.CharCount = (COUNT)~0;
+		font_DrawText (&t);
+		
+
+			
 	DrawStamp (stamp);
 
 	return true;

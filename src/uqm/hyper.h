@@ -67,6 +67,57 @@
 #define SOL_Y  1450
 
 
+#define RADAR_SHIP_TYPES \
+	{ \
+	'A', \
+	'-', \
+	'-', \
+	'O', \
+	'P', \
+	'-', \
+	'S', \
+	'x', \
+	'T', \
+	'G', \
+	'V', \
+	'Y', \
+	'N', \
+	'D', \
+	'I', \
+	'M', \
+	'L', \
+	'h', \
+	'U', \
+	'Z', \
+	'-', \
+	'K', \
+	'R' \
+}
+//0 Arilou
+//1 Chmmr
+//2 Human
+//3 Orz
+//4 Pkunk
+//5 SHOFIXTI
+//6 Spathi
+//7 Supox
+//8 Thraddash
+//9 Utwig
+//10 Vux
+//11 Yehat
+//12 Melnorme
+//13 Druuge
+//14 Ilwrath
+//15 Mycon
+//16 Slylandro
+//17 Umgah
+//18 Ur-Quan
+//19 Zoq
+//20 Syreen
+//21 Kohr-Ah
+//22 Yehat Rebels
+ 
+ 
 extern BOOLEAN LoadHyperspace (void);
 extern BOOLEAN FreeHyperspace (void);
 extern void SeedUniverse (void);
