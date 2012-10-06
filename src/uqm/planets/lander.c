@@ -535,27 +535,116 @@ pickupMineralNode (PLANETSIDE_DESC *pPSD, COUNT NumRetrieved,
 	UNICODE ch;
 	UNICODE *pStr;
 
-	if (pPSD->ElementLevel >= pPSD->MaxElementLevel)
+	// Lander has run over a mineral node:
+	// Is there enough room on the lander for all of it? If so, nothing special needs to be done
+	// Would there be enough room on the lander, but the main ship is full?
+	// If so, is there cargo that's worth less on the main ship? If so, dump that cargo and pick up the new mineral
+    // Is there enough room for some of it on the lander, but the rest would be wasted? Try to save the extra	
+	
+	//Lander current mineral amounts stored: pPSD->ElementLevel
+	//Lander CURRENT max mineral amount allowed, taking into account cargo space: pPSD->MaxElementLevel
+	//Lander max mineral amount allowed: ???
+	//Ship cargo space remaining: GetStorageBayCapacity() - GLOBAL_SIS (TotalElementMass)
+	//Current mineral node value level: ElementCategory (ElementPtr->turn_wait)
+	//Current mineral node count: NumRetrieved
+	
+	COUNT LanderMaxCapacity = MAX_SCROUNGED;
+	if (GET_GAME_STATE (IMPROVED_LANDER_CARGO))
+		LanderMaxCapacity <<= 1;	
+	
+	
+	// used to determine cargo that can be discarded and replaced with higher value pickups
+	COUNT extra = 0;
+	COUNT MineralsReplaced = 0;
+	COUNT cargo_space_free;
+log_add (log_Info, "pickupMineralNode:");
+log_add (log_Info, "num: %d element level: %d max: %d", NumRetrieved, pPSD->ElementLevel, pPSD->MaxElementLevel);
+// if the current lander storage >= maximum storage? (can it ever be >?) Then we're not picking anything up
+// Not going to worry about discarding less valuable minerals on the lander itself
+	if (pPSD->ElementLevel >= LanderMaxCapacity)
 	{
-		// Lander full
-		PlaySound (SetAbsSoundIndex (LanderSounds, LANDER_FULL),
-				NotPositional (), NULL, GAME_SOUND_PRIORITY);
+		NumRetrieved = 0;
+	}
+	else
+	{
+		cargo_space_free = GetStorageBayCapacity() - GLOBAL_SIS (TotalElementMass); // Probably don't need this - already the basis for MaxElementLevel
+log_add (log_Info, "cargo space free: %d num retrieved: %d", cargo_space_free, NumRetrieved);
+log_add (log_Info, "element level: %d max: %d new element level: %d", pPSD->ElementLevel, pPSD->MaxElementLevel, ElementCategory(ElementPtr->turn_wait));
+
+//	EType = ElementPtr->turn_wait;	
+//	ElementCategory (EType)
+	// Current lander cargo level + number in the current element greater than the current max lander capacity?
+	// NumRetrieved will now have the maximum space left in the lander, extra will have the remainder
+		if (pPSD->ElementLevel + NumRetrieved > pPSD->MaxElementLevel)
+		{
+			extra = NumRetrieved;
+			if (pPSD->MaxElementLevel >= pPSD->ElementLevel)
+				{NumRetrieved = pPSD->MaxElementLevel - pPSD->ElementLevel;}
+			else
+				{NumRetrieved = 0;}
+			extra -= NumRetrieved;
+		}
+log_add (log_Info, "extra: %d", extra);	
+
+	//Okay, revamp time. Extra will be the basis. At this point, if extra is 0, then all of the mineral was picked up anyway.
+	//So only if extra > 0 do we need to worry about it. At that point, our worrying options include: dumping ship cargo that's worth less
+	// up to the maximum remaining lander space, or saving the leftover minerals.
+		if (extra > 0)
+		{
+			COUNT ExceedsLanderExtras =  extra - (LanderMaxCapacity - pPSD->ElementLevel - NumRetrieved); // Otherwise we'd be overloading our lander
+			extra -= ExceedsLanderExtras;
+			COUNT extra2 = extra;
+			BYTE element_type;
+			element_type = ElementPtr->turn_wait;
+			element_type = ElementCategory (element_type);
+			COUNT index;
+			for (index = 0; index < element_type; ++index)
+			{
+				if (extra2 == 0) break;			
+				if (GLOBAL_SIS (ElementAmounts[index]) > 0)
+				{
+					if (GLOBAL_SIS (ElementAmounts[index]) >= extra2)
+					{
+						log_add (log_Info,  "Extra2: %d  mineral #%d amounts: %d\n", extra2, index, GLOBAL_SIS (ElementAmounts[index]));
+						GLOBAL_SIS (ElementAmounts[index]) -= extra2;
+						GLOBAL_SIS (TotalElementMass) -= extra2;
+						extra2 = 0;
+					}
+					else
+					{
+						log_add (log_Info,  "ZExtra2: %d  mineral #%d  amounts: %d\n", extra2, index, GLOBAL_SIS (ElementAmounts[index]));
+						GLOBAL_SIS (TotalElementMass) -= GLOBAL_SIS (ElementAmounts[index]);
+						extra2 = extra2 - (GLOBAL_SIS (ElementAmounts[index]));
+						GLOBAL_SIS (ElementAmounts[index]) = 0;
+					}
+				}
+			}
+			
+			MineralsReplaced = extra - extra2;
+			extra = extra - MineralsReplaced + ExceedsLanderExtras;
+			// At this point, NumRetrieved has the number of minerals picked up normally, MineralsReplaced has the number of minerals
+			// that are going to replace existing main ship cargo, and extra are leftover would-be wasted minerals
+			
+			log_add (log_Info, "NumRetrieved: %d replaced: %d extra: %d\n", NumRetrieved, MineralsReplaced, extra);
+		}
+	}
+
+	if (NumRetrieved + MineralsReplaced == 0)
+	{										
+		PlaySound (SetAbsSoundIndex (
+					LanderSounds, LANDER_FULL),
+					NotPositional (), NULL,
+					GAME_SOUND_PRIORITY);
 		return false;
-	}
+	}			
 
-	if (pPSD->ElementLevel + NumRetrieved > pPSD->MaxElementLevel)
-	{
-		// Deposit could only be picked up partially.
-		NumRetrieved = (COUNT)(pPSD->MaxElementLevel - pPSD->ElementLevel);
-	}
-
-	FillLanderHold (pPSD, MINERAL_SCAN, NumRetrieved);
+	FillLanderHold (pPSD, MINERAL_SCAN, NumRetrieved + MineralsReplaced);
 
 	EType = ElementPtr->turn_wait;
-	pPSD->ElementAmounts[ElementCategory (EType)] += NumRetrieved;
+	pPSD->ElementAmounts[ElementCategory (EType)] += NumRetrieved + MineralsReplaced;
 
 	pPSD->NumFrames = NUM_TEXT_FRAMES;
-	sprintf (pPSD->AmountBuf, "%u", NumRetrieved);
+	sprintf (pPSD->AmountBuf, "%u (%u %u)", NumRetrieved, MineralsReplaced, extra);
 	pStr = GAME_STRING (EType + ELEMENTS_STRING_BASE);
 
 	pPSD->MineralText[0].baseline.x = (SURFACE_WIDTH >> 1)
@@ -582,8 +671,22 @@ pickupMineralNode (PLANETSIDE_DESC *pPSD, COUNT NumRetrieved,
 		pPSD->MineralText[2].CharCount = (COUNT)~0;
 	}
 
-	return true;
-}
+	if (extra > 0)
+	{
+//	NumRetrieved = ElementPtr->mass_points
+/*				which_node = HIBYTE (ElementPtr->scan_node) - 1;
+				if (callPickupForScanType (pSolarSysState,
+						pSolarSysState->pOrbitalDesc, which_node, scan))
+				{	// Node retrieved, remove from the surface
+					setNodeRetrieved (&pSolarSysState->SysInfo.PlanetInfo,
+							scan, which_node);
+*/
+		ElementPtr->mass_points = extra;
+		return false;
+	}
+	return true;		
+}	
+	
 
 static bool
 pickupBioNode (PLANETSIDE_DESC *pPSD, COUNT NumRetrieved)
