@@ -32,6 +32,7 @@
 #include "libs/timelib.h"
 #include "libs/threadlib.h"
 
+#include "libs/log.h"
 
 #define ACCELERATION_INCREMENT (ONE_SECOND / 12)
 #define MENU_REPEAT_DELAY (ONE_SECOND / 2)
@@ -66,6 +67,8 @@ volatile CONTROLLER_INPUT_STATE ImmediateInputState;
 
 volatile BOOLEAN ExitRequested;
 volatile BOOLEAN GamePaused;
+
+
 
 static InputFrameCallback *inputCallback;
 

@@ -94,6 +94,8 @@ extern CONTROLLER_INPUT_STATE PulsedInputState;
 extern volatile CONTROLLER_INPUT_STATE ImmediateInputState;
 extern CONTROL_TEMPLATE PlayerControls[];
 
+extern BOOLEAN hyperspace_jammer;
+
 void UpdateInputState (void);
 extern void FlushInput (void);
 void SetMenuRepeatDelay (DWORD min, DWORD max, DWORD step, BOOLEAN gestalt);

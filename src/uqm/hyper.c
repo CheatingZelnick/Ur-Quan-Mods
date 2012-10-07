@@ -41,6 +41,9 @@
 #include "libs/graphics/gfx_common.h"
 #include "libs/mathlib.h"
 
+#include "libs/log.h"
+
+BOOLEAN hyperspace_jammer;
 
 #define XOFFS ((RADAR_SCAN_WIDTH + (UNIT_SCREEN_WIDTH << 2)) >> 1)
 #define YOFFS ((RADAR_SCAN_HEIGHT + (UNIT_SCREEN_HEIGHT << 2)) >> 1)
@@ -49,6 +52,8 @@ static FRAME hyperstars[3];
 static COLORMAP hypercmaps[2];
 static BYTE fuel_ticks;
 static COUNT hyper_dx, hyper_dy, hyper_extra;
+
+//BOOLEAN hyperspace_jammer = FALSE;
 
 // HyperspaceMenu() items
 enum HyperMenuItems
@@ -911,6 +916,20 @@ encounter_collision (ELEMENT *ElementPtr0, POINT *pPt0,
 {
 	HENCOUNTER hEncounter;
 	HENCOUNTER hNextEncounter;
+	
+//	BOOLEAN jammer_toggle = PulsedInputState.menu[KEY_ESCAPE];
+//log_add (log_Info, "escape key? %d or %d", PulsedInputState.menu[KEY_ESCAPE], PulsedInputState.key[0][KEY_ESCAPE]);
+//	if (PulsedInputState.key[0][KEY_ESCAPE] > 0)
+//	{ jammer_toggle = TRUE;}
+/*	if (hyperspace_jammer_toggle)
+	{
+		hyperspace_jammer = !hyperspace_jammer;
+	}
+*/
+log_add (log_Info, "jammer? %d", hyperspace_jammer);	
+	if (hyperspace_jammer)
+		return;
+
 
 	if (!(ElementPtr1->state_flags & PLAYER_SHIP)
 			|| !(GLOBAL (CurrentActivity) & IN_BATTLE))
