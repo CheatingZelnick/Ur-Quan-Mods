@@ -84,7 +84,6 @@ static const char *flight_res_names[] = {
 	"weapon",
 	"special",
 	"escape",
-	"bonus",
 	NULL
 };
 
@@ -127,7 +126,7 @@ register_flight_controls (void)
 		snprintf (buf, 39, "keys.%d.name", i+1);
 		if (res_IsString (buf))
 		{
-			strncpy (input_templates[i].name, res_GetString (buf), 29);			
+			strncpy (input_templates[i].name, res_GetString (buf), 29);
 			input_templates[i].name[29] = '\0';
 		}
 		else

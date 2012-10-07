@@ -32,7 +32,6 @@ enum {
 	KEY_WEAPON,
 	KEY_SPECIAL,
 	KEY_ESCAPE,
-	KEY_BONUS,
 	NUM_KEYS
 };
 enum {
@@ -59,7 +58,6 @@ enum {
 	KEY_MENU_EDIT_CANCEL,
 	KEY_MENU_SEARCH,
 	KEY_MENU_NEXT,
-	KEY_MENU_BONUS,
 	KEY_MENU_ANY, /* abstract char key */
 	NUM_MENU_KEYS
 };
@@ -87,7 +85,6 @@ typedef UBYTE BATTLE_INPUT_STATE;
 #define BATTLE_SPECIAL    ((BATTLE_INPUT_STATE)(1 << 4))
 #define BATTLE_ESCAPE     ((BATTLE_INPUT_STATE)(1 << 5))
 #define BATTLE_DOWN       ((BATTLE_INPUT_STATE)(1 << 6))
-#define BATTLE_BONUS      ((BATTLE_INPUT_STATE)(1 << 7))
 
 BATTLE_INPUT_STATE CurrentInputToBattleInput (COUNT player);
 BATTLE_INPUT_STATE PulsedInputToBattleInput (COUNT player);

@@ -209,15 +209,44 @@ ProcessInput (void)
 					if (CanRunAway && cur_player == 0 &&
 							(InputState & BATTLE_ESCAPE))
 						DoRunAway (StarShipPtr);
-						
-					// Hyperspace encounter jammer toggle check
-					if (cur_player == 0 && (InputState & BATTLE_BONUS) &&
+					if (cur_player == 0 && (InputState & BATTLE_ESCAPE) &&
 						LOBYTE (GLOBAL (CurrentActivity)) == IN_HYPERSPACE)
 					{
 log_add (log_Info, "ProcessInput jammer? %d", hyperspace_jammer);
 						hyperspace_jammer = !hyperspace_jammer;
 log_add (log_Info, "ProcessInput jammer now? %d", hyperspace_jammer);
-//						InputState ^= BATTLE_ESCAPE; // nope, too late
+//		STAMP stamp;
+		TEXT t;
+		UNICODE buf[10];
+		LockMutex (GraphicsLock);
+		CONTEXT OldContext = SetContext (SpaceContext);
+		Color OldColor = SetContextBackGroundColor (BUILD_COLOR (
+			MAKE_RGB15 (0x00, 0x00, 0x15), 0x00));
+		SetContext(SpaceContext);		
+	
+
+		SetContextFont (TinyFont);
+		t.align = ALIGN_CENTER;
+		t.baseline.x = 5;
+		t.baseline.y = 5;
+		t.pStr = buf;
+		if (hyperspace_jammer)
+		{
+		SetContextForeGroundColor (BUILD_COLOR (
+			MAKE_RGB15 (0xFF, 0x50, 0x15), 0x3B));
+		}
+		else
+		{
+		SetContextForeGroundColor (BUILD_COLOR (
+			MAKE_RGB15 (0x00, 0x00, 0x00), 0x00));		
+		}			
+		sprintf (buf, "J");
+		t.CharCount = (COUNT)~0;
+		font_DrawText (&t);
+		UnlockMutex (GraphicsLock);
+	SetContextBackGroundColor (OldColor);
+	SetContext (OldContext);
+		
 					}
 						
 				}

@@ -262,13 +262,6 @@ UpdateInputState (void)
 				_check_for_pulse (&PulsedInputState.key[i][j],
 						&CachedInputState.key[i][j], &OldInputState.key[i][j],
 						&RepeatDelays.key[i][j], &NewTime, &Times.key[i][j]);
-if (j == KEY_BONUS && PulsedInputState.key[i][j] != 0) 
-{
-log_add (log_Info, "UpdateInputState key bonus %d",PulsedInputState.key[i][j]);	
-log_add (log_Info, "UpdateInputState cached %d",CachedInputState.key[i][j]);
-log_add (log_Info, "UpdateInputState times %d",Times.key[i][j]);
-log_add (log_Info, "UpdateInputState Old %d",OldInputState.key[i][j]);
-}
 			}
 		}
 		for (i = 0; i < NUM_MENU_KEYS; i++)
@@ -284,9 +277,6 @@ log_add (log_Info, "UpdateInputState Old %d",OldInputState.key[i][j]);
 
 	if (CurrentInputState.menu[KEY_EXIT])
 		ExitRequested = TRUE;
-		
-
-log_add (log_Info, "UpdateInputState CurrentInputState %d", CurrentInputState.key[0][KEY_BONUS]);
 }
 
 InputFrameCallback *
@@ -453,8 +443,6 @@ ControlInputToBattleInput (const int *keyState)
 		InputState |= BATTLE_ESCAPE;
 	if (keyState[KEY_DOWN])
 		InputState |= BATTLE_DOWN;
-	if (keyState[KEY_BONUS])
-		InputState |= BATTLE_BONUS;
 
 	return InputState;
 }
