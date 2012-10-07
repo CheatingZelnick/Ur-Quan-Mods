@@ -209,6 +209,17 @@ ProcessInput (void)
 					if (CanRunAway && cur_player == 0 &&
 							(InputState & BATTLE_ESCAPE))
 						DoRunAway (StarShipPtr);
+						
+					// Hyperspace encounter jammer toggle check
+					if (cur_player == 0 && (InputState & BATTLE_BONUS) &&
+						LOBYTE (GLOBAL (CurrentActivity)) == IN_HYPERSPACE)
+					{
+log_add (log_Info, "ProcessInput jammer? %d", hyperspace_jammer);
+						hyperspace_jammer = !hyperspace_jammer;
+log_add (log_Info, "ProcessInput jammer now? %d", hyperspace_jammer);
+//						InputState ^= BATTLE_ESCAPE; // nope, too late
+					}
+						
 				}
 			}
 
