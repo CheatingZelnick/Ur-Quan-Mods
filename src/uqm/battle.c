@@ -232,17 +232,19 @@ log_add (log_Info, "ProcessInput jammer now? %d", hyperspace_jammer);
 		t.pStr = buf;
 		if (hyperspace_jammer)
 		{
-		SetContextForeGroundColor (BUILD_COLOR (
+			SetContextForeGroundColor (BUILD_COLOR (
 			MAKE_RGB15 (0xFF, 0x50, 0x15), 0x3B));
+			sprintf (buf, "J");			
+			t.CharCount = (COUNT)~0;
+			font_DrawText (&t);
+			
 		}
 		else
 		{
 		SetContextForeGroundColor (BUILD_COLOR (
 			MAKE_RGB15 (0x00, 0x00, 0x00), 0x00));		
 		}			
-		sprintf (buf, "J");
-		t.CharCount = (COUNT)~0;
-		font_DrawText (&t);
+
 		UnlockMutex (GraphicsLock);
 	SetContextBackGroundColor (OldColor);
 	SetContext (OldContext);
